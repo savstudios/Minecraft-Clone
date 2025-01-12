@@ -16,6 +16,10 @@
 const int SCREEN_HEIGHT = 800;
 const int SCREEN_WIDTH = 600;
 
+// Custom Functions (this is so scope does not break)
+
+void HandleInput(GLFWwindow* window);
+
 // Custom Functions
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -57,7 +61,17 @@ void Update(GLFWwindow* window){
 
    // Update logic will go here
 
-   std::cout << "Game updated!";
+   // Handles the input from the user's keyboard and mouse
+   HandleInput(window);
+}
+
+void Render(){
+   glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // Set the color buffer to this color
+   glClear(GL_COLOR_BUFFER_BIT); // Clear the buffer
+}
+
+void HandleInput(GLFWwindow* window){
+   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ glfwSetWindowShouldClose(window, true); }
 }
 
 void TerminateAll(){
@@ -75,9 +89,15 @@ int WinMain(int argc, char** argv){
 
    // main loop:
    while (!glfwWindowShouldClose(window)){
-      glfwSwapBuffers(window);
-      glfwPollEvents();
-      Update(window);
+
+      // Render loop
+
+      Render();
+
+      // Other
+      glfwSwapBuffers(window); // Swap the front and back buffers
+      glfwPollEvents(); // Tell OpenGL to handle the main events (resizing, closing, etc.)
+      Update(window); // Run the update function
    }
 
    TerminateAll();
