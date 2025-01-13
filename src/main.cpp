@@ -13,8 +13,37 @@
 
 // Custom Variables
 
+float vertices[] = {
+   //     Vertices     //
+   -0.5f,  0.5f,  0.0f,  // Top left
+   -0.5f, -0.5f,  0.0f,  // Bottom left
+    0.5f,  0.5f,  0.0f,  // Top Right
+    0.5f, -0.5f,  0.0f,  // Bottom Right
+};
+
+unsigned int indices[] = {
+   0, 1, 3, // Bottom left triangle
+   0, 2, 3  // Bottom right triangle
+};
+
 const int SCREEN_HEIGHT = 800;
 const int SCREEN_WIDTH = 600;
+
+const char *vertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+
+"void main(){\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char *fragmentShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"FragColor = vec4(0.0f, 0.9f, 0.2f, 1.0f);\n"
+"}\n";
+
+unsigned int VBO, VAO, EBO, shaderProgram;
 
 // Custom Functions (this is so scope does not break)
 
@@ -66,8 +95,48 @@ void Update(GLFWwindow* window){
 }
 
 void Render(){
-   glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // Set the color buffer to this color
+   glClearColor(0.1f, 0.75f, 1.0f, 1.0f); // Set the color buffer to this color
    glClear(GL_COLOR_BUFFER_BIT); // Clear the buffer
+
+   glGenBuffers(1, &VBO); // Generate the VBO buffer
+   glGenBuffers(1, &EBO); // Generate the EBO buffer
+   glGenVertexArrays(1, &VAO); // Generate the vertex arrays
+
+   glBindVertexArray(VAO); // Bind the VAO
+
+   glBindBuffer(GL_ARRAY_BUFFER, VBO); // Bind the VBO buffer
+   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Sends the vertex data to the buffer's memory
+
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // Bind the EBO buffer
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Sends the element buffer data to the buffer's memory
+
+   unsigned int vertexShader, fragmentShader; 
+   vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create the vertex shader
+   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // Attach the shader source code to the shader object
+   glCompileShader(vertexShader); // Compile the shader into bits (00010101)
+
+   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create the fragment shader
+   glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL); // Attach the shader source code to the shader object
+   glCompileShader(fragmentShader); // Compile the shader into bits (00001001)
+
+   shaderProgram = glCreateProgram(); // Create a shader program
+
+   glAttachShader(shaderProgram, vertexShader); // Attach the vertex shader to the program
+   glAttachShader(shaderProgram, fragmentShader); // Attach the fragment shader to the program
+   glLinkProgram(shaderProgram); // Link the shader program
+
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // Tells OpenGL how to interpret the vertex data
+   glEnableVertexAttribArray(0);
+
+   glDeleteShader(vertexShader); // Delete the vertex and fragment shader
+   glDeleteShader(fragmentShader);
+
+   glUseProgram(shaderProgram); // Use the shader program
+   glBindVertexArray(VAO); // Bind the VAO
+   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
+
+   // Uncomment the next line to draw in WIREFRAME mode
+   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void HandleInput(GLFWwindow* window){
@@ -75,6 +144,10 @@ void HandleInput(GLFWwindow* window){
 }
 
 void TerminateAll(){
+   glDeleteVertexArrays(1, &VAO);
+   glDeleteBuffers(1, &VBO);
+   glDeleteBuffers(1, &EBO);
+   glDeleteProgram(shaderProgram);
    glfwTerminate();
 }
 
