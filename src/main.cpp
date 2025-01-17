@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <math.h>
 
 // GLFW and GLAD
 
@@ -14,11 +15,11 @@
 // Custom Variables
 
 float vertices[] = {
-   //     Vertices     //
-   -0.5f,  0.5f,  0.0f,  // Top left
-   -0.5f, -0.5f,  0.0f,  // Bottom left
-    0.5f,  0.5f,  0.0f,  // Top Right
-    0.5f, -0.5f,  0.0f,  // Bottom Right
+   //     Vertices     //     Colors     //  
+   -0.5f,  0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  // Top left
+   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  // Bottom left
+    0.5f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f,  // Top Right
+    0.5f, -0.5f,  0.0f,  1.0f, 1.0f, 1.0f,  // Bottom Right
 };
 
 unsigned int indices[] = {
@@ -31,23 +32,24 @@ const int SCREEN_WIDTH = 600;
 
 const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
-"out vec4 vertexColor;\n"
+"layout (location = 1) in vec3 aColor;\n"
+"out vec3 vertexColor;\n"
 "void main(){\n"
 "   gl_Position = vec4(aPos, 1.0);\n"
-"   vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
+"   vertexColor = aColor;\n"
 "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
-"uniform vec4 vertexColor;\n"
+"in vec3 vertexColor;\n"
 "void main()\n"
 "{\n"
-"FragColor = vertexColor;\n"
+"FragColor = vec4(vertexColor, 1.0);\n"
 "}\n";
 
 unsigned int VBO, VAO, EBO, shaderProgram;
 
-// Custom Functions (this is so scope does not break)
+// Declare Functions (this is so scope does not break)
 
 void HandleInput(GLFWwindow* window);
 
@@ -127,13 +129,20 @@ void Render(){
    glAttachShader(shaderProgram, fragmentShader); // Attach the fragment shader to the program
    glLinkProgram(shaderProgram); // Link the shader program
 
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // Tells OpenGL how to interpret the vertex data
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Tells OpenGL how to interpret the vertex data
    glEnableVertexAttribArray(0);
+   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // Tells OpenGL how to interpret the color data
+   glEnableVertexAttribArray(1);
 
    glDeleteShader(vertexShader); // Delete the vertex and fragment shader
    glDeleteShader(fragmentShader);
 
+   float time = glfwGetTime(); // Gets the current time
+   float greenVal = (std::sin(time) / 2.0f) + 0.5f; // Calculate the amount of green
+   int vertexColorLoc = glGetUniformLocation(shaderProgram, "vertexColor"); // Get the location of the uniform in the frag. shader
+
    glUseProgram(shaderProgram); // Use the shader program
+   glUniform4f(vertexColorLoc, 0.0f, greenVal, 0.0f, 1.0f); // Set the value of the uniform
    glBindVertexArray(VAO); // Bind the VAO
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
 
