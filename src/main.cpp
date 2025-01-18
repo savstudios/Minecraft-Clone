@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 // System files
 
 #include <iostream>
@@ -12,15 +14,16 @@
 // Custom Headers
 
 #include "headers/shader.h"
+#include "stb_image.h"
 
 // Custom Variables
 
 float vertices[] = {
-   //     Vertices     //     Colors     //  
-   -0.5f,  0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  // Top left
-   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  // Bottom left
-    0.5f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f,  // Top Right
-    0.5f, -0.5f,  0.0f,  1.0f, 1.0f, 1.0f,  // Bottom Right
+   //     Vertices     //     Colors     //      Textures       // 
+   -0.5f,  0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f,  // Top left
+   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f - (1.0f/16),  // Bottom left
+    0.5f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f,  0.0f + (1.0f/16), 1.0f,  // Top Right
+    0.5f, -0.5f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f + (1.0f/16), 1.0f - (1.0f/16), // Bottom Right
 };
 
 unsigned int indices[] = {
@@ -98,10 +101,17 @@ void Render(Shader* shader){
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // Bind the EBO buffer
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Sends the element buffer data to the buffer's memory
 
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Tells OpenGL how to interpret the vertex data
+   // Tells OpenGL how to interpret the vertex data
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
    glEnableVertexAttribArray(0);
-   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // Tells OpenGL how to interpret the color data
+
+   // Tells OpenGL how to interpret the color data
+   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); 
    glEnableVertexAttribArray(1);
+
+   // Tells OpenGL how to interpret the texture data
+   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); 
+   glEnableVertexAttribArray(2);
 
    shader -> use(); // Use the shader program
    glBindVertexArray(VAO); // Bind the VAO
@@ -113,6 +123,35 @@ void Render(Shader* shader){
 
    // Uncomment the next line to draw in WIREFRAME mode
    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+unsigned int LoadImage(const char* imgPath){
+
+   stbi_set_flip_vertically_on_load(true);
+
+   unsigned int texture;
+   glGenTextures(1, &texture); // Generate texture
+   glBindTexture(GL_TEXTURE_2D, texture); // Bind the texture
+
+   // Texture parameters
+
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+   int width, height, numberChannels;
+
+   unsigned char* data = stbi_load(imgPath, &width, &height, &numberChannels, 0);
+
+   if(data){
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+      glGenerateMipmap(GL_TEXTURE_2D);
+   }
+
+   stbi_image_free(data);
+
+   return texture;
 }
 
 void HandleInput(GLFWwindow* window){
@@ -138,6 +177,7 @@ int WinMain(int argc, char** argv){
    InitializeGL();
    GLFWwindow* window = CreateWindow(SCREEN_HEIGHT, SCREEN_WIDTH, "Minecraft Clone");
    Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
+   LoadImage("src/assets/images/texture-atlas.png");
 
    // main loop:
    while (!glfwWindowShouldClose(window)){
