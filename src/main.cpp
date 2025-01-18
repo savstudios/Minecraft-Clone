@@ -11,6 +11,7 @@
 
 // Custom Headers
 
+#include "headers/shader.h"
 
 // Custom Variables
 
@@ -29,23 +30,6 @@ unsigned int indices[] = {
 
 const int SCREEN_HEIGHT = 800;
 const int SCREEN_WIDTH = 600;
-
-const char *vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
-"out vec3 vertexColor;\n"
-"void main(){\n"
-"   gl_Position = vec4(aPos, 1.0);\n"
-"   vertexColor = aColor;\n"
-"}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 vertexColor;\n"
-"void main()\n"
-"{\n"
-"FragColor = vec4(vertexColor, 1.0);\n"
-"}\n";
 
 unsigned int VBO, VAO, EBO, shaderProgram;
 
@@ -98,7 +82,7 @@ void Update(GLFWwindow* window){
    HandleInput(window);
 }
 
-void Render(){
+void Render(Shader* shader){
    glClearColor(0.1f, 0.75f, 1.0f, 1.0f); // Set the color buffer to this color
    glClear(GL_COLOR_BUFFER_BIT); // Clear the buffer
 
@@ -114,37 +98,18 @@ void Render(){
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // Bind the EBO buffer
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Sends the element buffer data to the buffer's memory
 
-   unsigned int vertexShader, fragmentShader; 
-   vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create the vertex shader
-   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // Attach the shader source code to the shader object
-   glCompileShader(vertexShader); // Compile the shader into bits (00010101)
-
-   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // Create the fragment shader
-   glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL); // Attach the shader source code to the shader object
-   glCompileShader(fragmentShader); // Compile the shader into bits (00001001)
-
-   shaderProgram = glCreateProgram(); // Create a shader program
-
-   glAttachShader(shaderProgram, vertexShader); // Attach the vertex shader to the program
-   glAttachShader(shaderProgram, fragmentShader); // Attach the fragment shader to the program
-   glLinkProgram(shaderProgram); // Link the shader program
-
    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Tells OpenGL how to interpret the vertex data
    glEnableVertexAttribArray(0);
    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // Tells OpenGL how to interpret the color data
    glEnableVertexAttribArray(1);
 
-   glDeleteShader(vertexShader); // Delete the vertex and fragment shader
-   glDeleteShader(fragmentShader);
-
-   float time = glfwGetTime(); // Gets the current time
-   float greenVal = (std::sin(time) / 2.0f) + 0.5f; // Calculate the amount of green
-   int vertexColorLoc = glGetUniformLocation(shaderProgram, "vertexColor"); // Get the location of the uniform in the frag. shader
-
-   glUseProgram(shaderProgram); // Use the shader program
-   glUniform4f(vertexColorLoc, 0.0f, greenVal, 0.0f, 1.0f); // Set the value of the uniform
+   shader -> use(); // Use the shader program
    glBindVertexArray(VAO); // Bind the VAO
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
+
+   glDeleteVertexArrays(1, &VAO);
+   glDeleteBuffers(1, &VBO);
+   glDeleteBuffers(1, &EBO);
 
    // Uncomment the next line to draw in WIREFRAME mode
    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -172,13 +137,14 @@ int WinMain(int argc, char** argv){
 
    InitializeGL();
    GLFWwindow* window = CreateWindow(SCREEN_HEIGHT, SCREEN_WIDTH, "Minecraft Clone");
+   Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
 
    // main loop:
    while (!glfwWindowShouldClose(window)){
 
       // Render loop
 
-      Render();
+      Render(&rectangleShader);
 
       // Other
       glfwSwapBuffers(window); // Swap the front and back buffers
