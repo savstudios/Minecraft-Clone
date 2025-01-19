@@ -26,11 +26,11 @@
 // Custom Variables
 
 float vertices[] = {
-   //     Vertices     //     Colors     //      Textures       // 
-   -0.5f,  0.5f,  0.0f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f,  // Top left
-   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f - (1.0f/16),  // Bottom left
-    0.5f,  0.5f,  0.0f,  0.0f, 0.0f, 1.0f,  0.0f + (1.0f/16), 1.0f,  // Top Right
-    0.5f, -0.5f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f + (1.0f/16), 1.0f - (1.0f/16), // Bottom Right
+   //     Vertices     //     Textures       // 
+   -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  // Top left
+   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f - (1.0f/16),  // Bottom left
+    0.5f,  0.5f,  0.0f,  0.0f + (1.0f/16), 1.0f,  // Top Right
+    0.5f, -0.5f,  0.0f,  0.0f + (1.0f/16), 1.0f - (1.0f/16), // Bottom Right
 };
 
 unsigned int indices[] = {
@@ -51,15 +51,6 @@ float FPS, ms;
 // Declare Functions (this is so scope does not break)
 
 void HandleInput(GLFWwindow* window);
-
-glm::mat4 translate(){
-   glm::mat4 trans = glm::mat4(1.0f);
-   trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0f)); // Rotate the translation matrix
-   trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // Translate the matrix to the bottom right corner
-   // trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5)); // Scale the translation matrix
-
-   return trans;
-}
 
 // Custom Functions
 
@@ -109,6 +100,14 @@ void Render(Shader* shader){
    glClearColor(0.1f, 0.75f, 1.0f, 1.0f); // Set the color buffer to this color
    glClear(GL_COLOR_BUFFER_BIT); // Clear the buffer
 
+   glm::mat4 model = glm::mat4(1.0f); // Create a model matrix
+   glm::mat4 view = glm::mat4(1.0f); // Create a view matrix
+   glm::mat4 proj = glm::mat4(1.0f); // Create a projection matrix
+   model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate the matrix
+   view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // Translate the matrix
+   proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+
    glGenBuffers(1, &VBO); // Generate the VBO buffer
    glGenBuffers(1, &EBO); // Generate the EBO buffer
    glGenVertexArrays(1, &VAO); // Generate the vertex arrays
@@ -122,23 +121,24 @@ void Render(Shader* shader){
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Sends the element buffer data to the buffer's memory
 
    // Tells OpenGL how to interpret the vertex data
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
    glEnableVertexAttribArray(0);
 
-   // Tells OpenGL how to interpret the color data
-   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); 
-   glEnableVertexAttribArray(1);
-
    // Tells OpenGL how to interpret the texture data
-   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); 
+   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(6 * sizeof(float))); 
    glEnableVertexAttribArray(2);
-
-   glm::mat4 trans = translate();
 
    shader -> use(); // Use the shader program
 
-   unsigned int transformLocation = glGetUniformLocation(shader -> ID, "transform"); // Get the location of the transform uniform
-   glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(trans));
+   // Send the model matrix to the shader
+   unsigned int modelLocation = glGetUniformLocation(shader -> ID, "model");
+   glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+   // Send the view matrix to the shader
+   unsigned int viewLocation = glGetUniformLocation(shader -> ID, "view");
+   glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
+   // Send the projection matrix to the shader
+   unsigned int projLocation = glGetUniformLocation(shader -> ID, "proj");
+   glUniformMatrix4fv(projLocation, 1, GL_FALSE, &proj[0][0]);
 
    glBindVertexArray(VAO); // Bind the VAO
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
