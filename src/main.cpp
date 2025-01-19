@@ -13,6 +13,10 @@
 
 // Custom Headers
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "headers/shader.h"
 #include "stb_image.h"
 
@@ -39,6 +43,15 @@ unsigned int VBO, VAO, EBO, shaderProgram;
 // Declare Functions (this is so scope does not break)
 
 void HandleInput(GLFWwindow* window);
+
+glm::mat4 translate(){
+   glm::mat4 trans = glm::mat4(1.0f);
+   trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0f)); // Rotate the translation matrix
+   trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // Translate the matrix to the bottom right corner
+   // trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5)); // Scale the translation matrix
+
+   return trans;
+}
 
 // Custom Functions
 
@@ -113,7 +126,13 @@ void Render(Shader* shader){
    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); 
    glEnableVertexAttribArray(2);
 
+   glm::mat4 trans = translate();
+
    shader -> use(); // Use the shader program
+
+   unsigned int transformLocation = glGetUniformLocation(shader -> ID, "transform"); // Get the location of the transform uniform
+   glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(trans));
+
    glBindVertexArray(VAO); // Bind the VAO
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
 
