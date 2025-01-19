@@ -1,3 +1,5 @@
+#- P.S matrices does not work however if you have LaTeX you can see the matrices properly.
+
 # Vectors
 
 A vector is a direction with a magnitude (strength)
