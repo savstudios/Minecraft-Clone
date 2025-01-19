@@ -1,2 +1,2 @@
 all:
-	g++ -o main src/main.cpp src/glad.c -Iinclude -Lsrc/lib -lglfw3dll
+	g++ -o main src/main.cpp src/glad.c src/ImGUI/imgui.cpp src/ImGUI/imgui_draw.cpp src/ImGUI/imgui_widgets.cpp src/ImGUI/imgui_tables.cpp src/ImGUI/imgui_impl_glfw.cpp src/ImGUI/imgui_impl_opengl3.cpp  -Iinclude -Iinclude/ImGUI -Lsrc/lib -lglfw3dll

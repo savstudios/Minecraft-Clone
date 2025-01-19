@@ -19,6 +19,9 @@
 
 #include "headers/shader.h"
 #include "stb_image.h"
+#include "ImGUI/imgui_impl_glfw.h"
+#include "ImGUI/imgui_impl_opengl3.h"
+#include "ImGUI/imgui.h"
 
 // Custom Variables
 
@@ -39,6 +42,7 @@ const int SCREEN_HEIGHT = 800;
 const int SCREEN_WIDTH = 600;
 
 unsigned int VBO, VAO, EBO, shaderProgram;
+
 
 // Declare Functions (this is so scope does not break)
 
@@ -68,7 +72,6 @@ void InitializeGL(){
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // Hint GLFW on what major version we are on (Version 3)        3
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // Hint GLFW on what minor version we are on (Minor Version 3)  3
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Hint GLFW to use the core profile
-
 }
 
 GLFWwindow* CreateWindow(int width, int height, const char* title){
@@ -145,6 +148,30 @@ void Render(Shader* shader){
    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
+void initGUI(GLFWwindow* window){
+   // ImGUI initialization
+   IMGUI_CHECKVERSION();
+   ImGui::CreateContext();
+   ImGuiIO& io = ImGui::GetIO(); (void)io;
+   ImGui::StyleColorsDark();
+   ImGui_ImplGlfw_InitForOpenGL(window, true);
+   ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+void drawGUI(){
+   ImGui_ImplOpenGL3_NewFrame();
+   ImGui_ImplGlfw_NewFrame();
+   ImGui::NewFrame();
+
+   ImGui::Begin("Debug");
+   ImGui::Text("skibidi");
+   ImGui::End();
+
+   ImGui::Render();
+   ImGui::EndFrame();
+   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 unsigned int LoadImage(const char* imgPath){
 
    stbi_set_flip_vertically_on_load(true);
@@ -188,6 +215,10 @@ void TerminateAll(){
    glDeleteBuffers(1, &EBO);
    glDeleteProgram(shaderProgram);
    glfwTerminate();
+
+   ImGui_ImplOpenGL3_Shutdown();
+   ImGui_ImplGlfw_Shutdown();
+   ImGui::DestroyContext();
 }
 
 // Main function
@@ -200,6 +231,7 @@ int WinMain(int argc, char** argv){
    GLFWwindow* window = CreateWindow(SCREEN_HEIGHT, SCREEN_WIDTH, "Minecraft Clone");
    Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
    LoadImage("src/assets/images/texture-atlas.png");
+   initGUI(window);
    // LoadImage could be used again if you want multiple images at once
 
    // main loop:
@@ -208,6 +240,7 @@ int WinMain(int argc, char** argv){
       // Render loop
 
       Render(&rectangleShader);
+      drawGUI();
 
       // Other
       glfwSwapBuffers(window); // Swap the front and back buffers

@@ -5,7 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/include**",
-                "${workspaceFolder}**"
+                "${workspaceFolder}**",
+                "${workspaceFolder}/include/ImGUI**"
             ],
             "defines": [
                 "_DEBUG",
