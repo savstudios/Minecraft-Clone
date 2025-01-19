@@ -43,6 +43,10 @@ const int SCREEN_WIDTH = 600;
 
 unsigned int VBO, VAO, EBO, shaderProgram;
 
+double prevTime, currentTime = 0.0; double timeDifference;
+unsigned int counter = 0;
+
+float FPS, ms;
 
 // Declare Functions (this is so scope does not break)
 
@@ -164,7 +168,8 @@ void drawGUI(){
    ImGui::NewFrame();
 
    ImGui::Begin("Debug");
-   ImGui::Text("skibidi");
+   ImGui::Text("Frames Per Second (FPS): %.2f", FPS);
+   ImGui::Text("Time to render frame (ms): %.2f", ms);
    ImGui::End();
 
    ImGui::Render();
@@ -209,6 +214,18 @@ void HandleInput(GLFWwindow* window){
    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 }
 
+void calculateFps(){
+   currentTime = glfwGetTime();
+   timeDifference = currentTime - prevTime;
+   counter++;
+   if(timeDifference >= 1.0 / 30){
+      FPS = ((1.0 / timeDifference) * counter); // Calculate fps
+      ms = ((timeDifference / counter) * 1000); // Calculate ms
+      prevTime = currentTime;
+      counter = 0;
+   }
+}
+
 void TerminateAll(){
    glDeleteVertexArrays(1, &VAO);
    glDeleteBuffers(1, &VBO);
@@ -225,6 +242,8 @@ void TerminateAll(){
 
 int WinMain(int argc, char** argv){
 
+   // Variables
+
    // Main logic will go here
 
    InitializeGL();
@@ -238,7 +257,7 @@ int WinMain(int argc, char** argv){
    while (!glfwWindowShouldClose(window)){
 
       // Render loop
-
+      calculateFps();
       Render(&rectangleShader);
       drawGUI();
 
