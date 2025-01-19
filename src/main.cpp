@@ -117,6 +117,7 @@ void Render(Shader* shader){
    glBindVertexArray(VAO); // Bind the VAO
    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
 
+   // Delete all the unused stuff so we don't cause memory leaks
    glDeleteVertexArrays(1, &VAO);
    glDeleteBuffers(1, &VBO);
    glDeleteBuffers(1, &EBO);
@@ -131,7 +132,9 @@ unsigned int LoadImage(const char* imgPath){
 
    unsigned int texture;
    glGenTextures(1, &texture); // Generate texture
+   // glTextureActive could be used if you want more than 1 texture
    glBindTexture(GL_TEXTURE_2D, texture); // Bind the texture
+   // Repeat bind and textureActive to bind 2 textures
 
    // Texture parameters
 
@@ -178,6 +181,7 @@ int WinMain(int argc, char** argv){
    GLFWwindow* window = CreateWindow(SCREEN_HEIGHT, SCREEN_WIDTH, "Minecraft Clone");
    Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
    LoadImage("src/assets/images/texture-atlas.png");
+   // LoadImage could be used again if you want multiple images at once
 
    // main loop:
    while (!glfwWindowShouldClose(window)){
