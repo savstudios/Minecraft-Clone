@@ -23,58 +23,147 @@
 #include "ImGUI/imgui_impl_opengl3.h"
 #include "ImGUI/imgui.h"
 
+// Classes
+
 // Custom Variables
 
+/* Amount of textures the texture atlas holds
+   E.G:
+   Current texture atlas has a size of 256x256 pixels
+   Each texture is 16x16
+   256/16 = 16, so 16 rows and columns of textures
+   16*16 textures = 256 textures */
+int TEX_ATLAS_WIDTH = 16;
+int TEX_ATLAS_HEIGHT = 16;
+
+float calculateOffset(int tex_index, const char* type){
+   if (type == "height"){
+      std::cout << ((1.0/TEX_ATLAS_HEIGHT) * tex_index) << std::endl;
+      return ((1.0/TEX_ATLAS_HEIGHT) * tex_index);
+   }
+   else{
+      std::cout << ((1.0/(TEX_ATLAS_WIDTH) * tex_index)) << std::endl;
+      return ((1.0/TEX_ATLAS_WIDTH) * tex_index);
+   }
+}
+
+float DIRT_TEX_POS_TOP_LEFT[2] = {0.0, 0.0};
+float DIRT_TEX_POS_TOP_RIGHT[2] = {calculateOffset(1, "width"), 0.0};
+float DIRT_TEX_POS_BOTTOM_LEFT[2] = {0.0, calculateOffset(1, "height")};
+float DIRT_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(1, "width"), calculateOffset(1, "height")};
+// Side Grass texture Coords
+float SIDE_GRASS_TEX_POS_TOP_LEFT[2] = {calculateOffset(1, "width"), 0.0};
+float SIDE_GRASS_TEX_POS_TOP_RIGHT[2] = {calculateOffset(2, "width"), 0.0};
+float SIDE_GRASS_TEX_POS_BOTTOM_LEFT[2] = {calculateOffset(1, "width"), calculateOffset(1, "height")};
+float SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(2, "width"), calculateOffset(1, "height")};
+// Grass texture Coords
+float GRASS_TEX_POS_TOP_LEFT[2] = {calculateOffset(2, "width"), 0.0};
+float GRASS_TEX_POS_TOP_RIGHT[2] = {calculateOffset(3, "width"), 0.0};
+float GRASS_TEX_POS_BOTTOM_LEFT[2] = {calculateOffset(2, "width"), calculateOffset(1, "height")};
+float GRASS_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(3, "width"), calculateOffset(1, "height")};
+
 float vertices[] = {
-   //     Vertices     //     Textures       // 
-   -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  // Top left
-   -0.5f, -0.5f,  0.0f,  0.0f, 1.0f - (1.0f/16),  // Bottom left
-    0.5f,  0.5f,  0.0f,  0.0f + (1.0f/16), 1.0f,  // Top Right
-    0.5f, -0.5f,  0.0f,  0.0f + (1.0f/16), 1.0f - (1.0f/16), // Bottom Right
+   //     Vertices     //   Textures   //
+
+   // Back face
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+
+   // Front Face
+   -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+   -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+
+   // Right Face
+   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+   -0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+
+   // Left Face
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+
+   // Bottom Face
+   -0.5f, -0.5f, -0.5f,    DIRT_TEX_POS_BOTTOM_LEFT[0], DIRT_TEX_POS_BOTTOM_LEFT[1],
+    0.5f, -0.5f, -0.5f,    DIRT_TEX_POS_BOTTOM_RIGHT[0], DIRT_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f, -0.5f,  0.5f,    DIRT_TEX_POS_TOP_RIGHT[0], DIRT_TEX_POS_TOP_RIGHT[1],
+    0.5f, -0.5f,  0.5f,    DIRT_TEX_POS_TOP_RIGHT[0], DIRT_TEX_POS_TOP_RIGHT[1],
+   -0.5f, -0.5f,  0.5f,    DIRT_TEX_POS_TOP_LEFT[0], DIRT_TEX_POS_TOP_LEFT[1],
+   -0.5f, -0.5f, -0.5f,    DIRT_TEX_POS_BOTTOM_LEFT[0], DIRT_TEX_POS_BOTTOM_LEFT[1],
+
+   // Top Face
+   -0.5f,  0.5f, -0.5f,    GRASS_TEX_POS_BOTTOM_LEFT[0], GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f,  0.5f, -0.5f,    GRASS_TEX_POS_BOTTOM_RIGHT[0], GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f,  0.5f,  0.5f,    GRASS_TEX_POS_TOP_RIGHT[0], GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f,  0.5f,  0.5f,    GRASS_TEX_POS_TOP_RIGHT[0], GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f,  0.5f,  0.5f,    GRASS_TEX_POS_TOP_LEFT[0], GRASS_TEX_POS_TOP_LEFT[1],
+   -0.5f,  0.5f, -0.5f,    GRASS_TEX_POS_BOTTOM_LEFT[0], GRASS_TEX_POS_BOTTOM_LEFT[1],
 };
 
 unsigned int indices[] = {
-   0, 1, 3, // Bottom left triangle
-   0, 2, 3  // Bottom right triangle
+    0, 1, 3, // Bottom left triangle
+    0, 2, 3  // Bottom right triangle
 };
 
-const int SCREEN_HEIGHT = 800;
-const int SCREEN_WIDTH = 600;
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
 
 unsigned int VBO, VAO, EBO, shaderProgram;
 
-double prevTime, currentTime = 0.0; double timeDifference;
+double prevTime, currentTime = 0.0;
+double timeDifference;
 unsigned int counter = 0;
 
 float FPS, ms;
 
 // Declare Functions (this is so scope does not break)
 
-void HandleInput(GLFWwindow* window);
+void HandleInput(GLFWwindow *window);
 
 // Custom Functions
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
 
    // Sets the new viewport size to the new scale of the window
    glViewport(0, 0, width, height);
 }
 
-void InitializeGL(){
+void InitializeGL()
+{
    // Initialize GLFW (or basically openGL)
 
    glfwInit();
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // Hint GLFW on what major version we are on (Version 3)        3
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // Hint GLFW on what minor version we are on (Minor Version 3)  3
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);                 // Hint GLFW on what major version we are on (Version 3)        3
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                 // Hint GLFW on what minor version we are on (Minor Version 3)  3
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Hint GLFW to use the core profile
 }
 
-GLFWwindow* CreateWindow(int width, int height, const char* title){
+GLFWwindow *CreateWindow(int width, int height, const char *title)
+{
    // Create a window with our parameters given (width, height and the title)
-   GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
+   GLFWwindow *window = glfwCreateWindow(width, height, title, NULL, NULL);
 
    // Check if the window exists, if not, then print out that something's gone wrong
-   if (!window){throw std::runtime_error("Failed to create a GLFW WINDOW!"); glfwTerminate(); }
+   if (!window)
+   {
+      throw std::runtime_error("Failed to create a GLFW WINDOW!");
+      glfwTerminate();
+   }
 
    // Make our window the current context
    glfwMakeContextCurrent(window);
@@ -83,12 +172,18 @@ GLFWwindow* CreateWindow(int width, int height, const char* title){
    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
    // Check if GLAD has been loaded
-   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){throw std::runtime_error("Failed to initalize GLAD!"); }
+   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+   {
+      throw std::runtime_error("Failed to initalize GLAD!");
+   }
+
+   glEnable(GL_DEPTH_TEST);
 
    return window;
 }
 
-void Update(GLFWwindow* window){
+void Update(GLFWwindow *window)
+{
 
    // Update logic will go here
 
@@ -96,52 +191,52 @@ void Update(GLFWwindow* window){
    HandleInput(window);
 }
 
-void Render(Shader* shader){
+void Render(Shader *shader)
+{
    glClearColor(0.1f, 0.75f, 1.0f, 1.0f); // Set the color buffer to this color
-   glClear(GL_COLOR_BUFFER_BIT); // Clear the buffer
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);          // Clear the buffer
 
-   glm::mat4 model = glm::mat4(1.0f); // Create a model matrix
-   glm::mat4 view = glm::mat4(1.0f); // Create a view matrix
-   glm::mat4 proj = glm::mat4(1.0f); // Create a projection matrix
-   model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate the matrix
-   view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // Translate the matrix
-   proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+   glm::mat4 model = glm::mat4(1.0f);                                             // Create a model matrix
+   glm::mat4 view = glm::mat4(1.0f);                                              // Create a view matrix
+   glm::mat4 proj = glm::mat4(1.0f);                                              // Create a projection matrix
+   model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-50.0f), glm::vec3(0.5f, 1.0f, 0.0f)); // Rotate the matrix
+   view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));                     // Translate the matrix
+   proj = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
-
-   glGenBuffers(1, &VBO); // Generate the VBO buffer
-   glGenBuffers(1, &EBO); // Generate the EBO buffer
+   glGenBuffers(1, &VBO);      // Generate the VBO buffer
+   glGenBuffers(1, &EBO);      // Generate the EBO buffer
    glGenVertexArrays(1, &VAO); // Generate the vertex arrays
 
    glBindVertexArray(VAO); // Bind the VAO
 
-   glBindBuffer(GL_ARRAY_BUFFER, VBO); // Bind the VBO buffer
+   glBindBuffer(GL_ARRAY_BUFFER, VBO);                                        // Bind the VBO buffer
    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Sends the vertex data to the buffer's memory
 
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // Bind the EBO buffer
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);                                      // Bind the EBO buffer
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Sends the element buffer data to the buffer's memory
 
    // Tells OpenGL how to interpret the vertex data
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
    glEnableVertexAttribArray(0);
 
    // Tells OpenGL how to interpret the texture data
-   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(6 * sizeof(float))); 
+   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
    glEnableVertexAttribArray(2);
 
-   shader -> use(); // Use the shader program
+   shader->use(); // Use the shader program
 
    // Send the model matrix to the shader
-   unsigned int modelLocation = glGetUniformLocation(shader -> ID, "model");
+   unsigned int modelLocation = glGetUniformLocation(shader->ID, "model");
    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
    // Send the view matrix to the shader
-   unsigned int viewLocation = glGetUniformLocation(shader -> ID, "view");
+   unsigned int viewLocation = glGetUniformLocation(shader->ID, "view");
    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
    // Send the projection matrix to the shader
-   unsigned int projLocation = glGetUniformLocation(shader -> ID, "proj");
+   unsigned int projLocation = glGetUniformLocation(shader->ID, "proj");
    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &proj[0][0]);
 
    glBindVertexArray(VAO); // Bind the VAO
-   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the triangles
+   glDrawArrays(GL_TRIANGLES, 0, 36); // Draw the triangles
 
    // Delete all the unused stuff so we don't cause memory leaks
    glDeleteVertexArrays(1, &VAO);
@@ -152,17 +247,20 @@ void Render(Shader* shader){
    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void initGUI(GLFWwindow* window){
+void initGUI(GLFWwindow *window)
+{
    // ImGUI initialization
    IMGUI_CHECKVERSION();
    ImGui::CreateContext();
-   ImGuiIO& io = ImGui::GetIO(); (void)io;
+   ImGuiIO &io = ImGui::GetIO();
+   (void)io;
    ImGui::StyleColorsDark();
    ImGui_ImplGlfw_InitForOpenGL(window, true);
    ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-void drawGUI(){
+void drawGUI()
+{
    ImGui_ImplOpenGL3_NewFrame();
    ImGui_ImplGlfw_NewFrame();
    ImGui::NewFrame();
@@ -177,9 +275,10 @@ void drawGUI(){
    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-unsigned int LoadImage(const char* imgPath){
+unsigned int LoadImage(const char *imgPath)
+{
 
-   stbi_set_flip_vertically_on_load(true);
+   stbi_set_flip_vertically_on_load(false);
 
    unsigned int texture;
    glGenTextures(1, &texture); // Generate texture
@@ -196,9 +295,10 @@ unsigned int LoadImage(const char* imgPath){
 
    int width, height, numberChannels;
 
-   unsigned char* data = stbi_load(imgPath, &width, &height, &numberChannels, 0);
+   unsigned char *data = stbi_load(imgPath, &width, &height, &numberChannels, 0);
 
-   if(data){
+   if (data)
+   {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
       glGenerateMipmap(GL_TEXTURE_2D);
    }
@@ -208,17 +308,29 @@ unsigned int LoadImage(const char* imgPath){
    return texture;
 }
 
-void HandleInput(GLFWwindow* window){
-   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ glfwSetWindowShouldClose(window, true); }
-   if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){ glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
-   if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+void HandleInput(GLFWwindow *window)
+{
+   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+   {
+      glfwSetWindowShouldClose(window, true);
+   }
+   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   }
+   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   }
 }
 
-void calculateFps(){
+void calculateFps()
+{
    currentTime = glfwGetTime();
    timeDifference = currentTime - prevTime;
    counter++;
-   if(timeDifference >= 1.0 / 30){
+   if (timeDifference >= 1.0 / 30)
+   {
       FPS = ((1.0 / timeDifference) * counter); // Calculate fps
       ms = ((timeDifference / counter) * 1000); // Calculate ms
       prevTime = currentTime;
@@ -226,7 +338,8 @@ void calculateFps(){
    }
 }
 
-void TerminateAll(){
+void TerminateAll()
+{
    glDeleteVertexArrays(1, &VAO);
    glDeleteBuffers(1, &VBO);
    glDeleteBuffers(1, &EBO);
@@ -240,21 +353,23 @@ void TerminateAll(){
 
 // Main function
 
-int WinMain(int argc, char** argv){
+int WinMain(int argc, char **argv)
+{
 
    // Variables
 
    // Main logic will go here
 
    InitializeGL();
-   GLFWwindow* window = CreateWindow(SCREEN_HEIGHT, SCREEN_WIDTH, "Minecraft Clone");
+   GLFWwindow *window = CreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minecraft Clone");
    Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
    LoadImage("src/assets/images/texture-atlas.png");
    initGUI(window);
    // LoadImage could be used again if you want multiple images at once
 
    // main loop:
-   while (!glfwWindowShouldClose(window)){
+   while (!glfwWindowShouldClose(window))
+   {
 
       // Render loop
       calculateFps();
@@ -263,8 +378,8 @@ int WinMain(int argc, char** argv){
 
       // Other
       glfwSwapBuffers(window); // Swap the front and back buffers
-      glfwPollEvents(); // Tell OpenGL to handle the main events (resizing, closing, etc.)
-      Update(window); // Run the update function
+      glfwPollEvents();        // Tell OpenGL to handle the main events (resizing, closing, etc.)
+      Update(window);          // Run the update function
    }
 
    TerminateAll();
