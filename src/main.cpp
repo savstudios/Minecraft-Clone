@@ -98,6 +98,13 @@ unsigned int counter = 0;
 
 float FPS, ms;
 
+// **CAMERA**
+
+// Camera Vector
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); 
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 // Declare Functions (this is so scope does not break)
 
 void HandleInput(GLFWwindow *window);
@@ -164,12 +171,22 @@ void Render(Shader *shader)
    glClearColor(0.1f, 0.75f, 1.0f, 1.0f); // Set the color buffer to this color
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);          // Clear the buffer
 
-   glm::mat4 model = glm::mat4(1.0f);                                             // Create a model matrix
-   glm::mat4 view = glm::mat4(1.0f);                                              // Create a view matrix
-   glm::mat4 proj = glm::mat4(1.0f);                                              // Create a projection matrix
-   model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-50.0f), glm::vec3(0.5f, 1.0f, 0.0f)); // Rotate the matrix
-   view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));                     // Translate the matrix
+   glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // Make a vector about where the camera is looking at
+   glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget); // Calculate the camera's direction
+   glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+   glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection)); // Make a vector that points to the right of the camera
+
+   glm::mat4 model = glm::mat4(1.0f); // Create a model matrix
+   glm::mat4 view; // Create a view matrix
+   glm::mat4 proj = glm::mat4(1.0f); // Create a projection matrix
+   // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-50.0f), glm::vec3(0.5f, 1.0f, 0.0f)); // Rotate the matrix
    proj = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+
+   const float radius = 10.0f;
+   // Calculate the X and Z coords of the view matrix
+   float camX = std::sin(glfwGetTime()) * radius; 
+   float camZ = std::cos(glfwGetTime()) * radius;
+   view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
    glGenBuffers(1, &VBO);      // Generate the VBO buffer
    glGenBuffers(1, &EBO);      // Generate the EBO buffer
@@ -278,18 +295,16 @@ unsigned int LoadImage(const char *imgPath)
 
 void HandleInput(GLFWwindow *window)
 {
-   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-   {
-      glfwSetWindowShouldClose(window, true);
-   }
-   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   }
-   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   }
+   const float cameraSpeed = 0.05f;
+   // Misc Keys
+   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ glfwSetWindowShouldClose(window, true); }
+   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){ glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+   // Camera Control Keys
+   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) cameraPos += cameraSpeed * cameraFront; 
+   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) cameraPos -= cameraSpeed * cameraFront; 
+   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; 
+   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; 
 }
 
 void calculateFps()
