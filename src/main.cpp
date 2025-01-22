@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "headers/shader.h"
+#include "headers/texture-data.h"
 #include "stb_image.h"
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
@@ -27,40 +28,7 @@
 
 // Custom Variables
 
-/* Amount of textures the texture atlas holds
-   E.G:
-   Current texture atlas has a size of 256x256 pixels
-   Each texture is 16x16
-   256/16 = 16, so 16 rows and columns of textures
-   16*16 textures = 256 textures */
-int TEX_ATLAS_WIDTH = 16;
-int TEX_ATLAS_HEIGHT = 16;
 
-float calculateOffset(int tex_index, const char* type){
-   if (type == "height"){
-      std::cout << ((1.0/TEX_ATLAS_HEIGHT) * tex_index) << std::endl;
-      return ((1.0/TEX_ATLAS_HEIGHT) * tex_index);
-   }
-   else{
-      std::cout << ((1.0/(TEX_ATLAS_WIDTH) * tex_index)) << std::endl;
-      return ((1.0/TEX_ATLAS_WIDTH) * tex_index);
-   }
-}
-
-float DIRT_TEX_POS_TOP_LEFT[2] = {0.0, 0.0};
-float DIRT_TEX_POS_TOP_RIGHT[2] = {calculateOffset(1, "width"), 0.0};
-float DIRT_TEX_POS_BOTTOM_LEFT[2] = {0.0, calculateOffset(1, "height")};
-float DIRT_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(1, "width"), calculateOffset(1, "height")};
-// Side Grass texture Coords
-float SIDE_GRASS_TEX_POS_TOP_LEFT[2] = {calculateOffset(1, "width"), 0.0};
-float SIDE_GRASS_TEX_POS_TOP_RIGHT[2] = {calculateOffset(2, "width"), 0.0};
-float SIDE_GRASS_TEX_POS_BOTTOM_LEFT[2] = {calculateOffset(1, "width"), calculateOffset(1, "height")};
-float SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(2, "width"), calculateOffset(1, "height")};
-// Grass texture Coords
-float GRASS_TEX_POS_TOP_LEFT[2] = {calculateOffset(2, "width"), 0.0};
-float GRASS_TEX_POS_TOP_RIGHT[2] = {calculateOffset(3, "width"), 0.0};
-float GRASS_TEX_POS_BOTTOM_LEFT[2] = {calculateOffset(2, "width"), calculateOffset(1, "height")};
-float GRASS_TEX_POS_BOTTOM_RIGHT[2] = {calculateOffset(3, "width"), calculateOffset(1, "height")};
 
 float vertices[] = {
    //     Vertices     //   Textures   //
@@ -82,20 +50,20 @@ float vertices[] = {
    -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
 
    // Right Face
-   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
-   -0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
-   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
-   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
-   -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
-   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+   -0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+   -0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+   -0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+   -0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
 
    // Left Face
-    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
-    0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
-    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
-    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
-    0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
-    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
+    0.5f,  0.5f, -0.5f,    SIDE_GRASS_TEX_POS_TOP_RIGHT[0], SIDE_GRASS_TEX_POS_TOP_RIGHT[1],
+    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f, -0.5f, -0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[0], SIDE_GRASS_TEX_POS_BOTTOM_RIGHT[1],
+    0.5f, -0.5f,  0.5f,    SIDE_GRASS_TEX_POS_BOTTOM_LEFT[0], SIDE_GRASS_TEX_POS_BOTTOM_LEFT[1],
+    0.5f,  0.5f,  0.5f,    SIDE_GRASS_TEX_POS_TOP_LEFT[0], SIDE_GRASS_TEX_POS_TOP_LEFT[1],
 
    // Bottom Face
    -0.5f, -0.5f, -0.5f,    DIRT_TEX_POS_BOTTOM_LEFT[0], DIRT_TEX_POS_BOTTOM_LEFT[1],
