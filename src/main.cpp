@@ -96,7 +96,11 @@ double prevTime, currentTime = 0.0;
 double timeDifference;
 unsigned int counter = 0;
 
-float FPS, ms;
+bool firstMouse = true;
+
+float FPS, ms, deltaTime, lastFrame, pitch;
+float yaw = -90.0f, fov = 45.0f;
+float lastX = SCREEN_WIDTH / 2, lastY = SCREEN_HEIGHT / 2;
 
 // **CAMERA**
 
@@ -108,6 +112,7 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 // Declare Functions (this is so scope does not break)
 
 void HandleInput(GLFWwindow *window);
+void mouseCallback(GLFWwindow* window, double xPos, double yPos);
 
 // Custom Functions
 
@@ -180,7 +185,7 @@ void Render(Shader *shader)
    glm::mat4 view; // Create a view matrix
    glm::mat4 proj = glm::mat4(1.0f); // Create a projection matrix
    // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-50.0f), glm::vec3(0.5f, 1.0f, 0.0f)); // Rotate the matrix
-   proj = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+   proj = glm::perspective(glm::radians(fov), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
    const float radius = 10.0f;
    // Calculate the X and Z coords of the view matrix
@@ -295,7 +300,7 @@ unsigned int LoadImage(const char *imgPath)
 
 void HandleInput(GLFWwindow *window)
 {
-   const float cameraSpeed = 0.05f;
+   const float cameraSpeed = 2.5f * deltaTime;
    // Misc Keys
    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ glfwSetWindowShouldClose(window, true); }
    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){ glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
@@ -305,6 +310,42 @@ void HandleInput(GLFWwindow *window)
    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) cameraPos -= cameraSpeed * cameraFront; 
    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; 
    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; 
+}
+
+void mouseCallback(GLFWwindow* window, double xPos, double yPos){
+
+   if(firstMouse){ lastX = xPos; lastY = yPos; firstMouse = false; };
+
+   float xOffset = xPos - lastX;
+   float yOffset = lastY - yPos;
+   lastX = xPos;
+   lastY = yPos;
+
+   const float sens = 0.1f;
+   xOffset *= sens;
+   yOffset *= sens;
+
+   yaw += xOffset;
+   pitch += yOffset;
+
+   // Check if we are not facing directly up
+   if(pitch > 89.0f){ pitch = 89.0f; }
+   if(pitch < -89.0f){ pitch = -89.0f; }
+
+   glm::vec3 dir;
+   // Calculate the direction axes
+   dir.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+   dir.y = std::sin(glm::radians(pitch));
+   dir.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+
+   // Normalise the direction
+   cameraFront = glm::normalize(dir);
+}
+
+void scrollCallback(GLFWwindow* window, double xOffset, double yOffset){
+   fov -= (float)yOffset;
+   if(fov < 1.0f) fov = 1.0f;
+   if(fov > 90.0f) fov = 90.0f;
 }
 
 void calculateFps()
@@ -319,6 +360,12 @@ void calculateFps()
       prevTime = currentTime;
       counter = 0;
    }
+}
+
+void calculateDeltaTime(){
+   float currentFrame = glfwGetTime();
+   deltaTime = currentFrame - lastFrame;
+   lastFrame = currentFrame;
 }
 
 void TerminateAll()
@@ -348,6 +395,9 @@ int WinMain(int argc, char **argv)
    Shader rectangleShader("src/assets/shaders/triangle.vert", "src/assets/shaders/triangle.frag");
    LoadImage("src/assets/images/texture-atlas.png");
    initGUI(window);
+   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+   glfwSetCursorPosCallback(window, mouseCallback);
+   glfwSetScrollCallback(window, scrollCallback);
    // LoadImage could be used again if you want multiple images at once
 
    // main loop:
@@ -356,6 +406,7 @@ int WinMain(int argc, char **argv)
 
       // Render loop
       calculateFps();
+      calculateDeltaTime();
       Render(&rectangleShader);
       drawGUI();
 
